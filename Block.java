@@ -1,5 +1,6 @@
 public class Block {
     boolean isWall;
+    boolean isExplored = false;
     float gScore; // Cost from start to n
     float hScore; // Heuristic Score
     float fScore; // g + h
@@ -59,6 +60,14 @@ public class Block {
 
     public void setY(int y) {
         this.y = y;
+    }
+
+    public boolean isExplored() {
+        return isExplored;
+    }
+
+    public void setExplored(boolean explored) {
+        isExplored = explored;
     }
 
     @Override
