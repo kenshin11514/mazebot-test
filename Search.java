@@ -1,7 +1,6 @@
 import java.util.ArrayList;
 import java.lang.Math;
-import java.util.HashSet;
-import java.util.List;
+import java.util.LinkedHashSet;
 
 public class Search {
     Block[][] maze;
@@ -10,7 +9,7 @@ public class Search {
     Block goalBlock;
     Block currentSearchBlock;
 
-    HashSet searchPath = new HashSet();
+    LinkedHashSet searchPath = new LinkedHashSet();
     ArrayList<Block> actualPath = new ArrayList<>();
     ArrayList<Block> frontier = new ArrayList<>();
 
@@ -22,6 +21,8 @@ public class Search {
         updateFScore(startBlock, 0);
         frontier.add(startBlock);
         searchPath.add(startBlock);
+        actualPath.add(startBlock);
+        startBlock.isExplored = true;
         currentSearchBlock = getLowestFscoreFromFrontier();
         printMaze();
         // BEGIN SEARCH
@@ -32,12 +33,18 @@ public class Search {
             // Remove currentSearchBlock from frontier
             frontier.remove(currentSearchBlock);
 
+            // If frontier is empty, maze can not be completed
+            if(frontier.size() == 0) {
+                System.out.println("Solution cannot be found :(\n");
+                return;
+            }
+
             // Update value of currentSearchBlock to be the block in frontier that has the lowest fscore
             currentSearchBlock = getLowestFscoreFromFrontier();
+            currentSearchBlock.isExplored = true;
 
             // Add to actualPath
             actualPath.add(currentSearchBlock);
-            // If frontier is empty, maze can not be completed
             printMaze();
         }
 
@@ -48,6 +55,8 @@ public class Search {
         System.out.println("Path Explored");
         System.out.println(searchPath);
         System.out.println();
+
+
 
     }
 
@@ -71,32 +80,33 @@ public class Search {
     }
 
     void generatePossibleActions() {
-        int x = currentSearchBlock.getX();
-        int y = currentSearchBlock.getY();
+        int x = currentSearchBlock.getX(); // Row
+        int y = currentSearchBlock.getY(); // Col
 
-        // Top
-        if(y != 0 && maze[x][y - 1].isWall() == false) {
+        // Left
+        if(y != 0 && !maze[x][y - 1].isWall() &&  !maze[x][y - 1].isExplored) {
             updateFScore(maze[x][y - 1], currentSearchBlock.getgScore() + 1);
             frontier.add(maze[x][y - 1]);
             searchPath.add(maze[x][y - 1]);
         }
-        // Bottom
+        // Right
         // Replace 2 with n size of maze
-        if(y != 2 && maze[x][y + 1].isWall() == false) {
+        if(y != 2 && !maze[x][y + 1].isWall() &&  !maze[x][y + 1].isExplored) {
             updateFScore(maze[x][y + 1], currentSearchBlock.getgScore() + 1);
             frontier.add(maze[x][y + 1]);
             searchPath.add(maze[x][y + 1]);
         }
-        // Left
-        if(x != 0 && maze[x - 1][y].isWall() == false) {
+
+        // Top
+        if(x != 0 && !maze[x - 1][y].isWall() &&  !maze[x - 1][y].isExplored) {
             updateFScore(maze[x - 1][y], currentSearchBlock.getgScore() + 1);
             frontier.add(maze[x - 1][y]);
             searchPath.add(maze[x - 1][y]);
         }
 
-        // Right
+        // Bottom
         // Replace 2 with n size of maze
-        if(x != 2 && maze[x + 1][y].isWall() == false) {
+        if(x != 2 && !maze[x + 1][y].isWall() &&  !maze[x + 1][y].isExplored) {
             updateFScore(maze[x + 1][y], currentSearchBlock.getgScore() + 1);
             frontier.add(maze[x + 1][y]);
             searchPath.add(maze[x + 1][y]);
@@ -104,12 +114,7 @@ public class Search {
     }
 
     boolean isEnd() {
-        if(currentSearchBlock == goalBlock) {
-            return true;
-        }
-        else {
-            return false;
-        }
+        return currentSearchBlock == goalBlock || frontier.size() == 0;
     }
 
     void printMaze() {
