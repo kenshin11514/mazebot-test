@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.lang.Math;
+import java.util.HashSet;
 import java.util.List;
 
 public class Search {
@@ -9,7 +10,7 @@ public class Search {
     Block goalBlock;
     Block currentSearchBlock;
 
-    ArrayList<Block> searchPath = new ArrayList<>();
+    HashSet searchPath = new HashSet();
     ArrayList<Block> actualPath = new ArrayList<>();
     ArrayList<Block> frontier = new ArrayList<>();
 
@@ -20,6 +21,7 @@ public class Search {
         goalBlock = maze[1][2];
         updateFScore(startBlock, 0);
         frontier.add(startBlock);
+        searchPath.add(startBlock);
         currentSearchBlock = getLowestFscoreFromFrontier();
         printMaze();
         // BEGIN SEARCH
@@ -38,6 +40,15 @@ public class Search {
             // If frontier is empty, maze can not be completed
             printMaze();
         }
+
+        System.out.println("Path to Goal");
+        System.out.println(actualPath);
+        System.out.println();
+
+        System.out.println("Path Explored");
+        System.out.println(searchPath);
+        System.out.println();
+
     }
 
     Block getLowestFscoreFromFrontier() {
@@ -65,26 +76,30 @@ public class Search {
 
         // Top
         if(y != 0 && maze[x][y - 1].isWall() == false) {
-            updateFScore(maze[x][y - 1], currentSearchBlock.getgScore());
+            updateFScore(maze[x][y - 1], currentSearchBlock.getgScore() + 1);
             frontier.add(maze[x][y - 1]);
+            searchPath.add(maze[x][y - 1]);
         }
         // Bottom
         // Replace 2 with n size of maze
         if(y != 2 && maze[x][y + 1].isWall() == false) {
-            updateFScore(maze[x][y + 1], currentSearchBlock.getgScore());
+            updateFScore(maze[x][y + 1], currentSearchBlock.getgScore() + 1);
             frontier.add(maze[x][y + 1]);
+            searchPath.add(maze[x][y + 1]);
         }
         // Left
         if(x != 0 && maze[x - 1][y].isWall() == false) {
-            updateFScore(maze[x - 1][y], currentSearchBlock.getgScore());
+            updateFScore(maze[x - 1][y], currentSearchBlock.getgScore() + 1);
             frontier.add(maze[x - 1][y]);
+            searchPath.add(maze[x - 1][y]);
         }
 
         // Right
         // Replace 2 with n size of maze
         if(x != 2 && maze[x + 1][y].isWall() == false) {
-            updateFScore(maze[x + 1][y], currentSearchBlock.getgScore());
+            updateFScore(maze[x + 1][y], currentSearchBlock.getgScore() + 1);
             frontier.add(maze[x + 1][y]);
+            searchPath.add(maze[x + 1][y]);
         }
     }
 
