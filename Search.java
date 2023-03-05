@@ -1,32 +1,72 @@
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
-import java.lang.Math;
+import java.util.List;
 import java.util.LinkedHashSet;
 
 public class Search {
-    Block[][] maze;
+    private List<Block> blocks = new ArrayList<>();
 
-    Block startBlock;
-    Block goalBlock;
-    Block currentSearchBlock;
+    private Block startBlock;
+    private Block goalBlock;
+    private Block currentSearchBlock;
 
     LinkedHashSet searchPath = new LinkedHashSet();
     ArrayList<Block> actualPath = new ArrayList<>();
     ArrayList<Block> frontier = new ArrayList<>();
 
+    Integer size = 0;
+    public void initMaze(int size) {
+        this.size = size;
+        try {
+            // Read file
+            String fileStr = Files.readString(Path.of("maze/maze" + String.valueOf(size) + ".txt"));
+            Integer firstLine=fileStr.indexOf('\n',0);
+            fileStr = fileStr.substring(firstLine+1, fileStr.length());
+            
+            // Place characters into an array
+            char[] chars = fileStr.toCharArray();
+            int x = 0;
+            int y = 0;
+
+            for(char c : chars) {
+                // Initialize a block inside the maze
+                Block block = new Block(x, y, c);
+                // Place blocks in an array
+                blocks.add(block);
+                // Assign x and y values
+                y = y + 1;
+                if(c == '\n') {
+                    y = 0; // Reset y value to 0 for a new line
+                    x = x + 1;
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public Block getBlock(Integer x, Integer y) {
+        for(Block block : blocks) {
+            if(block.getX() == x && block.getY() == y) {
+                return block;
+            }
+        }
+        return null;
+    }
 
     void search () {
         // PREPROCESSING
-        startBlock = maze[0][0];
-        goalBlock = maze[1][2];
-        updateFScore(startBlock, 0);
+        updateFScore(startBlock, 0.0);
         frontier.add(startBlock);
         searchPath.add(startBlock);
-        actualPath.add(startBlock);
         startBlock.isExplored = true;
         currentSearchBlock = getLowestFscoreFromFrontier();
-        printMaze();
+        currentSearchBlock.setGScore(0.0);
         // BEGIN SEARCH
         while(!isEnd()) { // Check for end game conditions
+
             // Generate all possible actions from currentSearchBlock, update fscore, add to frontier, add to searchPath
             generatePossibleActions();
 
@@ -43,21 +83,12 @@ public class Search {
             currentSearchBlock = getLowestFscoreFromFrontier();
             currentSearchBlock.isExplored = true;
 
-            // Add to actualPath
-            actualPath.add(currentSearchBlock);
-            printMaze();
         }
-
-        System.out.println("Path to Goal");
-        System.out.println(actualPath);
-        System.out.println();
-
-        System.out.println("Path Explored");
-        System.out.println(searchPath);
-        System.out.println();
-
-
-
+        if(currentSearchBlock == goalBlock) {
+            System.out.println("Path Found!");
+            reconstructActualPath();
+            System.out.println(actualPath);
+        }
     }
 
     Block getLowestFscoreFromFrontier() {
@@ -70,46 +101,56 @@ public class Search {
         return lowest;
     }
 
-    void updateFScore(Block b, float gScore) {
+    void updateFScore(Block b, Double gScore) {
         float h  = calculateDistanceBetweenPoints(b.getX(), b.getY(), goalBlock.getX(), goalBlock.getY());
         b.setfScore(h + gScore);
     }
 
     public float calculateDistanceBetweenPoints(int x1, int y1, int x2, int y2) {
-        return (float) Math.sqrt((y2 - y1) * (y2 - y1) + (x2 - x1) * (x2 - x1));
+        return (float) Math.abs(x1-x2) + Math.abs(y1-y2);
     }
 
     void generatePossibleActions() {
-        int x = currentSearchBlock.getX(); // Row
-        int y = currentSearchBlock.getY(); // Col
+        int x = currentSearchBlock.getX(); // Col
+        int y = currentSearchBlock.getY(); // Row
 
         // Left
-        if(y != 0 && !maze[x][y - 1].isWall() &&  !maze[x][y - 1].isExplored) {
-            updateFScore(maze[x][y - 1], currentSearchBlock.getgScore() + 1);
-            frontier.add(maze[x][y - 1]);
-            searchPath.add(maze[x][y - 1]);
+        if(getBlock(x, y-1) != null && y != 0 && !getBlock(x, y-1).isWall() &&  !getBlock(x, y-1).isExplored) {
+            getBlock(x, y-1).setGScore(currentSearchBlock.getGScore() + 1);
+            updateFScore(getBlock(x, y-1), currentSearchBlock.getgScore() + 1);
+            frontier.add(getBlock(x, y-1));
+            searchPath.add(getBlock(x, y-1));
+            currentSearchBlock.neighbors.add(getBlock(x, y-1));
+            getBlock(x, y-1).setPrev(currentSearchBlock);
         }
         // Right
-        // Replace 2 with n size of maze
-        if(y != 2 && !maze[x][y + 1].isWall() &&  !maze[x][y + 1].isExplored) {
-            updateFScore(maze[x][y + 1], currentSearchBlock.getgScore() + 1);
-            frontier.add(maze[x][y + 1]);
-            searchPath.add(maze[x][y + 1]);
+        if(getBlock(x, y+1) != null && y + 1 != size && !getBlock(x, y+1).isWall() &&  !getBlock(x, y+1).isExplored) {
+            getBlock(x, y+1).setGScore(currentSearchBlock.getGScore() + 1);
+            updateFScore(getBlock(x, y+1), currentSearchBlock.getgScore() + 1);
+            frontier.add(getBlock(x, y+1));
+            searchPath.add(getBlock(x, y+1));
+            currentSearchBlock.neighbors.add(getBlock(x, y+1));
+            getBlock(x, y+1).setPrev(currentSearchBlock);
         }
 
         // Top
-        if(x != 0 && !maze[x - 1][y].isWall() &&  !maze[x - 1][y].isExplored) {
-            updateFScore(maze[x - 1][y], currentSearchBlock.getgScore() + 1);
-            frontier.add(maze[x - 1][y]);
-            searchPath.add(maze[x - 1][y]);
+        if(getBlock(x-1, y) != null && x != 0 && !getBlock(x-1, y).isWall() &&  !getBlock(x-1, y).isExplored) {
+            getBlock(x-1, y).setGScore(currentSearchBlock.getGScore() + 1);
+            updateFScore(getBlock(x-1, y), currentSearchBlock.getgScore() + 1);
+            frontier.add(getBlock(x-1, y));
+            searchPath.add(getBlock(x-1, y));
+            currentSearchBlock.neighbors.add(getBlock(x-1, y));
+            getBlock(x-1, y).setPrev(currentSearchBlock);
         }
 
         // Bottom
-        // Replace 2 with n size of maze
-        if(x != 2 && !maze[x + 1][y].isWall() &&  !maze[x + 1][y].isExplored) {
-            updateFScore(maze[x + 1][y], currentSearchBlock.getgScore() + 1);
-            frontier.add(maze[x + 1][y]);
-            searchPath.add(maze[x + 1][y]);
+        if(getBlock(x+1, y) != null && x + 1!= size && !getBlock(x+1, y).isWall() &&  !getBlock(x+1, y).isExplored) {
+            getBlock(x+1, y).setGScore(currentSearchBlock.getGScore() + 1);
+            updateFScore(getBlock(x+1, y), currentSearchBlock.getgScore() + 1);
+            frontier.add(getBlock(x+1, y));
+            searchPath.add(getBlock(x+1, y));
+            currentSearchBlock.neighbors.add(getBlock(x+1, y));
+            getBlock(x+1, y).setPrev(currentSearchBlock);
         }
     }
 
@@ -117,27 +158,28 @@ public class Search {
         return currentSearchBlock == goalBlock || frontier.size() == 0;
     }
 
-    void printMaze() {
-        for(int i = 0; i < 3; i++) {
-            for(int j = 0; j < 3; j++) {
-                if(currentSearchBlock.getX() == i && currentSearchBlock.getY() == j) {
-                    System.out.print("B");
-                }
-                else {
-                    if(maze[i][j].isWall) {
-                        System.out.print("#");
-                    }
-                    else {
-                        System.out.print(".");
-                    }
-                }
-            }
-            System.out.println();
-        }
-        System.out.println();
+    public void setStartBlock(Block startBlock) {
+        this.startBlock = startBlock;
     }
 
-    public Search(Block[][] maze) {
-        this.maze = maze;
+    public void setGoalBlock(Block goalBlock) {
+        this.goalBlock = goalBlock;
+    }
+
+    public LinkedHashSet getSearchPath() {
+        return searchPath;
+    }
+
+    public ArrayList<Block> getActualPath() {
+        return actualPath;
+    }
+
+    void reconstructActualPath() {
+        Block current = this.currentSearchBlock;
+        while (current != startBlock) {
+            this.actualPath.add(current);
+            current = current.prev;
+        }
+
     }
 }

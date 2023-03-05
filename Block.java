@@ -1,77 +1,90 @@
-public class Block {
-    boolean isWall;
-    boolean isExplored = false;
-    float gScore; // Cost from start to n
-    float hScore; // Heuristic Score
-    float fScore; // g + h
-    
-    int x;
-    int y;
+import java.util.ArrayList;
 
-    public Block(boolean isWall, int x, int y) {
-        this.isWall = isWall;
+/*
+ * Initializes values of a block.
+ */
+public class Block {
+    
+    Integer x, y;
+    Boolean isWall = false;
+    Boolean isStart = false;
+    Boolean isGoal = false;
+    Boolean isPath = false;
+    Boolean isExplored = false;
+
+    Double gScore; // Cost from start to n
+    Double hScore; // Heuristic score
+    Double fScore; // g() + h()
+
+    ArrayList<Block> neighbors = new ArrayList<Block>();
+    Block prev;
+
+    public Block(Integer x, Integer y, char c) {
         this.x = x;
         this.y = y;
+
+        if(c == '#')
+            this.isWall = true;
+
+        if(c == 'S')
+            this.isStart = true;
+
+        if(c == 'G')
+            this.isGoal = true;
+
+        if(c == '.')
+            this.isPath = true;
     }
 
-    public boolean isWall() {
-        return isWall;
-    }
-
-    public void setWall(boolean wall) {
-        isWall = wall;
-    }
-
-    public float getgScore() {
+    public Double getGScore() {
         return gScore;
     }
 
-    public void setgScore(float gScore) {
+    public void setGScore(Double gScore) {
         this.gScore = gScore;
     }
 
-    public float gethScore() {
-        return hScore;
-    }
 
-    public void sethScore(float hScore) {
-        this.hScore = hScore;
-    }
-
-    public float getfScore() {
-        return fScore;
-    }
-
-    public void setfScore(float fScore) {
-        this.fScore = fScore;
-    }
-
-    public int getX() {
+    public Integer getX() {
         return x;
     }
 
-    public void setX(int x) {
+    public void setX(Integer x) {
         this.x = x;
     }
 
-    public int getY() {
+    public Integer getY() {
         return y;
     }
 
-    public void setY(int y) {
+    public void setY(Integer y) {
         this.y = y;
-    }
-
-    public boolean isExplored() {
-        return isExplored;
-    }
-
-    public void setExplored(boolean explored) {
-        isExplored = explored;
     }
 
     @Override
     public String toString() {
-        return "[" + String.valueOf(this.x) +", "+ String.valueOf(this.y) +"]";
+        return "[" + String.valueOf(this.y) +", "+ String.valueOf(this.x) +"]";
+    }
+
+    // Getters and Setters
+    public Boolean isWall() {
+
+        return isWall;
+    }
+
+    public Double getgScore() {
+        return gScore;
+    }
+
+    public Double getfScore() {
+        return fScore;
+    }
+
+    public void setfScore(Double fScore) {
+        this.fScore = fScore;
+    }
+
+    public void setPrev(Block prev) {
+        this.prev = prev;
     }
 }
